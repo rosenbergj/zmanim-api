@@ -1,10 +1,9 @@
-#!/usr/bin/python2 -u
+#!/usr/bin/python3 -u
 
 import time
 import datetime
 import ephem
-import urllib
-import urllib2
+import urllib.request
 import socket
 import json
 import re
@@ -23,7 +22,7 @@ HMONTHS = {True: ("", "Nisan", "Iyar", "Sivan", "Tammuz", "Av", "Elul", "Tishrei
 def ord(n):
     return str(n)+("th" if 4<=n%100<=20 else {1:"st",2:"nd",3:"rd"}.get(n%10, "th"))
 
-ipapi = json.loads(urllib2.urlopen("http://ip-api.com/json").read().decode('utf-8'))
+ipapi = json.loads(urllib.request.urlopen("http://ip-api.com/json").read().decode('utf-8'))
 
 homeloc = ephem.Observer()
 #homeloc.lat, homeloc.lon = location.longitude*ephem.pi/180, location.longitude*ephem.pi/180
