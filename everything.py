@@ -1,8 +1,9 @@
 #!/usr/bin/python3 -u
 
-import time
-import datetime
+from datetime import date, datetime, time
 import ephem
+from pytz import timezone
+from timezonefinder import TimezoneFinder
 import urllib.request
 import socket
 import json
@@ -31,18 +32,22 @@ homeloc.lat, homeloc.lon = ipapi['lat']*ephem.pi/180, ipapi['lon']*ephem.pi/180
 sun = ephem.Sun()
 #sun.compute(homeloc)
 
+today = date.today()
 
-if time.localtime().tm_isdst > 0:
-    tzseconds = time.altzone
-else:
-    tzseconds = time.timezone
+tf = TimezoneFinder()
+localtz = timezone(tf.timezone_at(lng=ipapi['lon'], lat=ipapi['lat']))
+utc = timezone('UTC')
+todaynoon = localtz.localize(datetime.combine(today, time(12,0,0)))
 
-timenow = datetime.datetime.utcnow()
-localtimenow = (timenow - datetime.timedelta(seconds=tzseconds))
+# string showing noon local time, but converted to UTC
+noonstring = todaynoon.astimezone(utc).strftime("%Y/%m/%d %H:%M:%S")
+#print(noonstring)
+homeloc.date = noonstring
 
-d = datetime.datetime.utcnow()
-nowstring = ("{0.year}/{0.month}/{0.day} {0.hour}:{0.minute}:{0.second}").format(d)
-homeloc.date = nowstring
+# homeloc is now an ephem Observer object at:
+#   - the specified/retrieved latitude and longitude
+#   - sea level
+#   - noon today (or the specified day), local time
 
 sunup = False
 hebdateoffset = 0
@@ -53,9 +58,10 @@ if homeloc.previous_rising(sun) > homeloc.previous_setting(sun):
 else:
     prevriseset = homeloc.previous_setting(sun)
     nextriseset = homeloc.next_rising(sun)
-    if localtimenow.hour >= 12:
-        hebdateoffset=12
+#    if localtimenow.hour >= 12:
+#        hebdateoffset=12
 nextriseset12hr = (ephem.localtime(nextriseset).hour+11)%12+1
+print(nextriseset)
 
 oldhorizon = homeloc.horizon
 # All horizon math is from top of sun disk
